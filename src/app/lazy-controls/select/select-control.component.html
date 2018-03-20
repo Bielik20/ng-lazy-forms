@@ -1,0 +1,7 @@
+<div class="form-group">
+  <label class="center-block">{{metadata.label}}:
+    <select class="form-control" [formControl]="control">
+      <option *ngFor="let option of metadata.collection" [value]="option">{{option}}</option>
+    </select>
+  </label>
+</div>

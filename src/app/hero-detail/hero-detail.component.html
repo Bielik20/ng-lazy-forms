@@ -1,0 +1,27 @@
+<form lazyForm [formGroup]="heroForm" (ngSubmit)="onSubmit()">
+  <div style="margin-bottom: 1em">
+    <button type="submit"
+            [disabled]="heroForm.pristine" class="btn btn-success">Save</button> &nbsp;
+    <button type="button" (click)="revert()"
+            [disabled]="heroForm.pristine" class="btn btn-danger">Revert</button>
+  </div>
+
+  <!-- Hero Detail Controls -->
+  <lazy-selector [value]="hero.name" [metadata]="hero.metadata('name')"></lazy-selector>
+  <lazy-selector [value]="hero.addresses" [metadata]="hero.metadata('addresses')"></lazy-selector>
+
+  <div class="form-group radio">
+    <h4>Super power:</h4>
+    <label class="center-block"><input type="radio" formControlName="power" value="flight">Flight</label>
+    <label class="center-block"><input type="radio" formControlName="power" value="x-ray vision">X-ray vision</label>
+    <label class="center-block"><input type="radio" formControlName="power" value="strength">Strength</label>
+  </div>
+  <div class="checkbox">
+    <label class="center-block">
+      <input type="checkbox" formControlName="sidekick">I have a sidekick.
+    </label>
+  </div>
+</form>
+
+<p>heroForm value: {{ heroForm.value | json}}</p>
+<p>heroForm status: {{ heroForm.status | json }}</p>

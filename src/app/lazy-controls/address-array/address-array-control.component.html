@@ -1,0 +1,12 @@
+<div lazyForm [formGroup]="control" class="well well-lg">
+  <div *ngFor="let item of value; let i=index" style="margin-bottom: 40px">
+    <h4>
+      <span (click)="removeItem(i)" style="cursor: pointer" class="glyphicon glyphicon-trash text-danger"></span>
+      {{metadata.label}} #{{i + 1}}
+    </h4>
+    <div style="margin-left: 1em;">
+      <lazy-selector [value]="item" [metadata]="metadata.child"></lazy-selector>
+    </div>
+  </div>
+  <button (click)="addItem()" type="button">Add a Secret Lair</button>
+</div>
