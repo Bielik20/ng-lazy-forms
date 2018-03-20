@@ -5,7 +5,14 @@
   "author": "Damian Bielecki",
   "license": "MIT",
   "keywords": [
-    "angular"
+    "angular",
+    "reactive forms",
+    "dynamic forms",
+    "nested forms",
+    "partial forms",
+    "ioc",
+    "inversion of control",
+    "typescript"
   ],
   "repository": {
     "type": "git",
