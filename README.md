@@ -1,6 +1,12 @@
 # NgLazyForms
 
-Angular Lazy Forms is a project that aims to deliver IoC solution for creating Reactive Forms in Angular. The goal behind the idea is to enable user creation of small loosely coupled components which can be used to create complex forms.
+**Context**: In the Angular framework there are two types of forms, template driven and reactive. Both of them are effective for their respective use cases but neither addresses the problem of reusability and logic encapsulation. This flaw results in very bulky and complex form components.
+
+**Objective**: Angular Lazy Forms is a project that aims to deliver IoC solution for creating Reactive Forms in Angular. The goal behind the idea is to enable user creation of small loosely coupled components which can be used to create complex forms.
+
+Available on:
+- [GitHub](https://github.com/Bielik20/ng-lazy-forms)
+- [npm](https://www.npmjs.com/package/ng-lazy-forms)
 
 
 ## Installation
@@ -23,7 +29,7 @@ imports: [
 
 # Demo and Tutorial
 
-Following [demo application](https://github.com/Bielik20/ng-lazy-forms) uses NgLazyForms to recreates application from [Angular Reactive Forms tutorial](https://angular.io/guide/reactive-forms) as for version 5.2.9 with minor changes that are discussed during the explanation. To inspect demo for yourself simply repository and run:
+Following [demo application](https://github.com/Bielik20/ng-lazy-forms) uses **NgLazyForms** to recreates application from [Angular Reactive Forms tutorial](https://angular.io/guide/reactive-forms) as for version 5.2.9 with minor changes that are discussed in the tutorial. To inspect demo for yourself simply clone repository and run:
 ```
 npm i
 ng serve
@@ -39,16 +45,22 @@ Create a new project named `angular-lazy-forms`:
 ng new angular-lazy-forms
 ```
 
-Install ng-lazy-forms package:
+Install **NgLazyForms** package:
 
 ```
 npm i ng-lazy-forms
 ```
 
+## Vocabulary
 
-## Create a Base Metadata
+**NgLazyForms** use **LazyMetadata**s to generate and manage components called **LazyControl**s.
 
-Lazy Forms use metadata to generate and manage components called Lazy Controls (discussed later in this tutorial). It defines basic metadata required to work:
+- Component that implements **LazyControl** is refered as **CustomLazyControl**.
+- Its metadata (which implements **LazyMetadata**) is refered as **CustomLazyMetadata**.
+
+### **LazyMetadata**
+
+**NgLazyForms** define **LazyMetadata** as well as getter and setter:
 
 ```ts
 export abstract class LazyMetadata {
@@ -57,14 +69,62 @@ export abstract class LazyMetadata {
 }
 ```
 
-as well as metadata getter and setter methods:
-
 ```ts
 export function setLazyMetadata(value: LazyMetadata);
 export function getLazyMetadata(propertyKey: string, target: object): LazyMetadata | any;
 ```
 
-However, it is advised to expand it so it can be used it the application. Following example is just a suggestion that should be adjusted for needs of the application. In `src/app/lazy-controls/metadata.ts` paste:
+### **LazyControl**
+
+**NgLazyForms** define **LazyControl** as well as optional **OnLazySetup** interface:
+
+```ts
+export abstract class LazyControlComponent {
+  abstract value: any;
+  abstract metadata: LazyMetadata;
+  abstract control: AbstractControl;
+}
+```
+
+```ts
+export interface OnLazySetup {
+  onLazySetup();
+}
+```
+
+Implementing **OnLazySetup** is advised as it allows a component to be rebuild without destroying it. This method is responsible for all the cleaning and set up of the component. Its functionality resembles quite a bit Angular's own **ngOnChanges** method. It is up to developer to provide it.
+
+### **CustomLazyControl** with **CustomLazyMetadata**
+
+**CustomLazyControl** always comes with its own **CustomLazyMetadata**. It uses this metadata to build and configure itself. They are strongly coupled:
+
+- **CustomLazyControl** expects its **CustomLazyMetadata** as an input.
+- **CustomLazyMetadata** keeps a reference to its **CustomLazyControl** to tell **NgLazyForms** what component to create.
+
+It is advised to keep them in the same file to avoid circular dependency warning as they both refer each other. Example of such a relation:
+
+```ts
+export class CustomLazyMetadata extends LazyMetadata {
+  component = CustomLazyControl;
+  ...
+}
+
+@Component({...})
+export class CustomLazyControl implements LazyControlComponent {
+  @Input() value: any;
+  @Input() metadata: CustomLazyMetadata;
+  control: AbstractControl;
+  ...
+}
+```
+
+> If this seems overwhelming at the moment don't worry. It will become clearer with examples.
+
+## Create a **BaseMetadata**
+
+**NgLazyForms** define **LazyMetadata** but it is advised to expand it so it can be used it the application. Following example is just a suggestion that should be adjusted for needs of every application. 
+
+In `src/app/lazy-controls/metadata.ts` paste:
 
 ```ts
 import { LazyMetadata, getLazyMetadata, setLazyMetadata } from 'ng-lazy-forms';
@@ -87,59 +147,34 @@ export abstract class MetadataAccessor {
 export function metadata(value: BaseMetadata) {
   return setLazyMetadata(value);
 }
-
 ```
 
-- `BaseMetadata` class extends LazyMetadata by adding properties used in field presentation. In this example, it is only the label but it could include "hint", "placeholder", "validators" etc.
-- `MetadataAccessor` wraps `getLazyMetadata` method to allow us easier access to metadata.
-- `metadata` function simply wraps setLazyMetadata function shielding it from the rest of the application.
+- **BaseMetadat** class extends **LazyMetadata** by adding properties used by **CustomLazyControl**s to build and customize itself. In this example, it is only the "label" but it could include "hint", "placeholder", "validators" etc.
+- `MetadataAccessor` wraps `getLazyMetadata` method to provide easier access to metadata.
+- `metadata` function simply wraps `setLazyMetadata` function shielding it from the rest of the application.
 
 
-## Create Lazy Controls
+## Create **CustomLazyControl**s
 
-Description of this tutorial states:
 > The goal behind the idea is to enable user creation of small loosely coupled components which can be used to create complex forms.
 
-Those "small loosely coupled components" are conventionally called "Lazy Controls". They are small, reusable components that depend on metadata to create complex forms. They do not ship with that library, it is up to the developer to create and maintain them.
+Those "small loosely coupled components" are conventionally called **CustomLazyControl**s. They should be small, reusable components that implement **LazyControl**. They depend on **CustomLazyMetadata** to build and customize itself. 
 
-In this tutorial, we are recreating Reactive Forms tutorial but "Superpower" and "Sidekick" will be made using standard Reactive Forms simply to show that they can be used alongside Lazy Forms.
+Both **CustomLazyControl**s and **CustomLazyMetadata**s do not ship with that library, it is up to the developer to create and maintain them.
 
-This means that following Lazy Controls are required:
+In this tutorial, the Reactive Forms tutorial application is being recreated using **NgLazyForms** with exception of "Superpower" and "Sidekick". They are made using standard Reactive Forms to demonstrate that they can be used alongside **NgLazyForms**.
 
-- `default` - to display standard text/number controls.
-- `select` - to display drop-down control.
-- `address` - to display 4 encapsulated control (street, city, state, zip code).
-- `address-array` - to manage an array of addresses.
+This means that following **CustomLazyControl**s are required:
 
-
-Lazy Control is a regular Angular Component that implements `LazyControlComponent` class:
-
-```ts
-export abstract class LazyControlComponent {
-  abstract value: any;
-  abstract metadata: LazyMetadata;
-  abstract control: AbstractControl;
-}
-```
-
-Additionally, a component can also implement `OnLazySetup` interface:
-
-```ts
-export interface OnLazySetup {
-  onLazySetup();
-}
-```
-
-Implementing it is advised as it allows a component to be rebuild without destroying it. This method is responsible for all the cleaning and set up of the component. Its functionality resembles quite a bit Angular's own `ngOnChanges` method.
+- **DefaultControl** - to display standard text/number controls.
+- **SelectControl** - to display drop-down control.
+- **AddressControl** - to display 4 encapsulated control (street, city, state, zip code).
+- **AddressArrayControl** - to manage an array of addresses.
 
 
-Lazy Control also ships with its own Metadata which extends `LazyMetadata` class. It uses this Metadata to build and configure itself as well as tell `LazyForms` which component to create.
+### **LazyControlsModule**
 
-> If this seems overwhelming at the moment don't worry. It will become clearer with examples.
-
-### LazyControlsModule
-
-Before we go and create actual Controls create `src/app/lazy-controls/lazy-controls.module.ts`:
+First create **LazyControlsModule**, `src/app/lazy-controls/lazy-controls.module.ts`:
 
 ```ts
 import { CommonModule } from '@angular/common';
@@ -162,8 +197,10 @@ import { LazyFormsModule } from 'ng-lazy-forms';
 export class LazyControlsModule {}
 ```
 
+Created **CustomLazyControl**s must be added to both `declarations` and `entryComponents` arrays.
 
-### Default Control
+
+### **DefaultControl**
 
 Create `src/app/lazy-controls/default/default-control.component.ts`:
 
@@ -205,22 +242,20 @@ export class DefaultControlComponent implements LazyControlComponent, OnLazySetu
 }
 ```
 
-The file exports two classes `DefaultMetadata` and `DefaultControlComponent`.
+This file exports **DefaultControl** and **DefaultMetadata**.
 
-`DefaultMetadata` extends `BaseMetadata` class we previously created which extends `LazyMetadata`. This means that we are fulfilling the contract and our `DefaultMetadata` in fact derives from `LazyMetadata`. 
+**DefaultMetadata** extends **BaseMetadata** and by extention **LazyMetadata**. This means that the contract is fulfilled and **DefaultMetadata** in fact derives from **LazyMetadata**. 
 
 - The `type` field refers to [html input type](https://www.w3schools.com/html/html_form_input_types.asp) with default of "text".
-- The `component` field points holds a type of `LazyControlComponent`. In this case, it points to `DefaultControlComponent`. It means that for this type of Metadata, it will render `DefaultControlComponent`
+- The `component` field keeps a reference to the **DefaultControl**. It tells **NgLazyForms** that for **DefaultMetadata** the **DefaultControl** should be rendered.
 
-`DefaultControlComponent` implements `LazyControlComponent` by introducing fields:
+**DefaultControl** implements **LazyControl** by introducing these fields:
 
-- `value` is expected to be `string`, `number` or a `Date`.
-- `metadata` should be of our own type `DefaultMetadata` so that we can use `type` field defined there.
-- `control` is a `FormControl` because it renders a single control (not an array or an object).
+- The `value` is expected to be a `string`, `number` or a `Date`.
+- The `metadata` should be of its own **DefaultMetadata** type so that so that **DefaultControl** can use fields introduced by it (i.e. `type`).
+- The `control` is a `FormControl` because it renders a single control (not an array or an object).
 
-`onLazySetup` method is very simple in this case. It creates form every time this control is being built or rebuilt.
-
-Control and its Metadata are strongly coupled, they always come together. It is advised to keep them in the same file to avoid circular dependency warning as they both refer each other.
+`onLazySetup` method is very simple in this case. It creates a form every time this control is being built or rebuilt.
 
 Now, create `src/app/lazy-controls/default/default-control.component.ts`:
 
@@ -234,11 +269,13 @@ Now, create `src/app/lazy-controls/default/default-control.component.ts`:
 
 This template contains few important things:
 
-- `metadata.label` is used to place a label of a control.
-- `control` is passed to `formControl` of an input. 
-- `metadata.type` is used to define a type of a control.
+- The `metadata.label` is used to place a label of a control.
+- The `control` is passed to `formControl` of an input. 
+- The `metadata.type` is used to define a type of a control.
 
-This way we have created reusable, configurable component capable of displaying input for `text`, `number` and `Date` using delivered metadata. All that remains is to add newly created Control to `LazyControlsModule`:
+This way created **DefaultControl** is configurable and reusable. It is capable of displaying input for `text`, `number` and `Date` using configuration from **DefaultMetadata**.
+
+All that remains is to add newly created **DefaultControl** to **LazyControlsModule**:
 
 ```ts
 declarations: [
@@ -248,8 +285,6 @@ entryComponents: [
   DefaultControlComponent,
 ]
 ```
-
-It is necessary to register it in both `declarations` and `entryComponents`.
 
 
 ### Select Control
@@ -306,11 +341,11 @@ and `src/app/lazy-controls/select/select-control.component.html`:
 </div>
 ```
 
-This Control is very similar to `DefaultControl` with a difference that metadata defines `collection` field which is used in the template to display select options.
+This Control is very similar to **DefaultControl** with a difference that **SelectMetadata** defines a `collection` field which is used in the template to display select options.
 
 > `DefaultControl` and `SelectControl` could be merged using `type` field of `DefaultMetadata` similar to the way it is done in [Angular Dynamic Forms tutorial](https://angular.io/guide/dynamic-form#question-form-components). It is up to the developer to make the decision what is the best design choice for given application.
 
-Now, add newly created Control to `LazyControlsModule`:
+Now, add newly created **SelectControl** to **LazyControlsModule**:
 
 ```ts
 declarations: [
@@ -361,9 +396,11 @@ export class AddressControlComponent implements LazyControlComponent, OnLazySetu
 }
 ```
 
-At the moment there is no Address class created. Don't worry we will take care of it soon.
+At the moment there is no Address class created. It will be added later in this tutorial.
 
-This Control is different as it creates `FormGroup` instead of `FormControl`. It also accepts an object as an input, not primitive. However, the biggest change is in the template. Create `src/app/lazy-controls/address/address-control.component.html`:
+**AddressControl** is different as it creates `FormGroup` instead of `FormControl`. It also accepts an object as an input, not primitive. However, the biggest change is in the template. 
+
+Create `src/app/lazy-controls/address/address-control.component.html`:
 
 ```html
 <div lazyForm [formGroup]="control">
@@ -374,14 +411,14 @@ This Control is different as it creates `FormGroup` instead of `FormControl`. It
 </div>
 ```
 
-- `lazyForm` directive informs that this element is a container for `LazyControl`s.
+- `lazyForm` directive informs that this element is a container for **CustomLazyControl**s.
 - `formGroup` takes as an input parent element. It can be either `FormGroup` or `FormArray`.
 
-This means that every `LazyControl` within `lazyForm` container will be attached to the parent element.
+This means that every `lazy-selector` (**CustomLazyControl**) within `lazyForm` container will be attached to the parent element.
 
-`lazy-selector` is a component responsible for rendering correct component based on the Metadata passed. It takes two mandatory inputs `value` and `metadata`. It is also responsible for attaching itself to the parent element.
+`lazy-selector` is a component responsible for rendering correct component based on the **CustomLazyMetadata** passed. It takes two mandatory inputs `value` and `metadata`. It is also responsible for attaching itself to the parent element.
 
-Now, add newly created Control to `LazyControlsModule`:
+Now, add newly created **AddressControl** to **LazyControlsModule**:
 
 ```ts
 declarations: [
@@ -449,8 +486,8 @@ export class AddressArrayControlComponent implements LazyControlComponent, OnLaz
 }
 ```
 
-- `AddressArrayMetadata` contains `child` field used to render array elements.
-- `AddressArrayControlComponent` is responsible for managing array. Besides standard `createForm` method it defines two other `addItem` and `removeItem`. They are very simple and operate on `value`, not `control`. `value` itself is shielded from outside the component. This means that any changes to that field in here have no effect on original value.
+- **AddressArrayMetadata** contains `child` field of type **AddressMetadata** used to render elements of an array.
+- **AddressArrayControl** is responsible for managing an array. Besides standard `createForm` method it defines two other, `addItem` and `removeItem`. They are very simple and operate on `value`, not `control`. `value` itself is shielded from outside the component. This means that any changes to that field in here have no effect on original value.
 
 Create `src/app/lazy-controls/address-array/address-array-control.component.html`:l`:
 
@@ -469,9 +506,9 @@ Create `src/app/lazy-controls/address-array/address-array-control.component.html
 </div>
 ```
 
-This template also uses `lazyForm` directive to define a container for `lazy-selector` which in this cases renders previously created `AddressControlComponent`.
+This template also uses `lazyForm` directive to define a container for `lazy-selector` which in this cases renders previously created **AddressControl**.
 
-Now, add newly created Control to `LazyControlsModule`:
+Now, add newly created **AddressArrayControl** to **LazyControlsModule**:
 
 ```ts
 declarations: [
@@ -488,7 +525,7 @@ entryComponents: [
 ## Create Models
 
 
-## Address
+### Address
 
 Create `src/app/models/address.ts`:
 
@@ -529,15 +566,15 @@ export class Address extends MetadataAccessor {
 ```
 
 `Address` class:
--  extends `MetadataAccessor` to be able to access Metadata through `metadata(propertyKey: string): BaseMetadata;` method.
+-  extends **MetadataAccessor** to be able to access metadata through `metadata(propertyKey: string): BaseMetadata;` method.
 - defines `update` method so that we can easily assign new values.
 
 `@metadata` attributes defined in `src/app/lazy-controls/metadata.ts` allows for the assignment of metadata to given fields. `key` is assigned automatically and is always the same as a field name.
 
-- Every field has defined label that will be used in their respective Controls.
-- `state` field has defined collection which will be used to present options in `SelectControl`.
+- Every field has a defined label that will be used in their respective **CustomLazyControl**s.
+- `state` field has a defined collection which will be used to present options in **SelectControl**.
 
-## Hero
+### Hero
 
 Create `src/app/models/hero.ts`:
 
@@ -573,7 +610,7 @@ export class Hero extends MetadataAccessor {
 }
 ```
 
-- `id` field doesn't have metadata because it is never used in form nor in display template.
+- `id` field doesn't have metadata because it is never used in a form nor in a display template.
 
 
 ## Create Hero Detail component
@@ -621,11 +658,11 @@ export class HeroDetailComponent implements OnChanges {
 }
 ```
 
-`HeroDetailComponent` is simplified compared to classic Reactive Form. Form creation, recreation, and revert are done in the same way using `createForm` method. There is no need for a deep copy of form addresses because in `hero.update(...)` method an array is recreated anyway which is basically a deep copy.
+`HeroDetailComponent` is simplified compared to the one in Reactive Forms tutorial. Form create, recreate, and revert operations are done in the same way using `createForm` method. There is no need for a deep copy of form addresses because in `hero.update(...)` method an array is recreated which server as a deep copy.
 
 In `ngOnChanges()` method it is required to use `setTimeout` with no latency. This is because cycle must end before resetting the form. This may change in the future updates.
 
-> There is no logging of the hero name in this tutorial because `LazyForms` are not designed to work with something like that. The idea behind `LazyForms` is to have a clearer separation of concerns. Parent component (e.g.`HeroDetailComponent`) is supposed to orchestrate a form as a whole, not particular elements. If there is a need to listen for a particular Control it should be done within that Control.
+> There is no logging of the hero name in this tutorial because **NgLazyForms** are not designed to work with something like that. The idea behind **NgLazyForms** is to have a clearer separation of concerns. Parent component (e.g. `HeroDetailComponent`) is supposed to orchestrate a form as a whole, not particular elements. If there is a need to listen for a particular **CustomLazyControl** it should be done within that **CustomLazyControl**.
 
 Create template `src/app/hero-detail/hero-detail.component.html`:
 
@@ -658,12 +695,12 @@ Create template `src/app/hero-detail/hero-detail.component.html`:
 <p>heroForm value: {{ heroForm.value | json}}</p>
 ```
 
-There are only two `LazyForms` specific elements in this template:
+There are only two **NgLazyForms** specific elements in this template:
 
 - `lazyForm` directive.
 - two `lazy-selector` elements.
 
-As discussed at the beginning of the tutorial `sidekick` and `power` remain as classic Reactive Forms elements to show they can be used alongside `LazyForms`. 
+As discussed at the beginning of this tutorial `sidekick` and `power` remain as classic Reactive Forms elements to show they can be used alongside **NgLazyForms**. 
 
 ## Finishing Application
 
@@ -905,7 +942,7 @@ Run `ng serve` to test the application. It should work just like the demo create
 
 ## Add Validation
 
-Adding validation to LazyForms is very simple. Edit `src/app/lazy-controls/metadata.ts`:
+Adding validation to **NgLazyForms** is very simple. Edit `src/app/lazy-controls/metadata.ts`:
 
 ```ts
 import { ValidatorFn, Validators } from '@angular/forms';
@@ -946,9 +983,9 @@ export function metadata(value: BaseMetadata) {
 }
 ```
 
-It adds `ValidatorsMetadata` class which introduces `required` field as well as `get validators` method that created Angular validators array. Other validators can be added as well using this method.
+It adds **ValidatorsMetadata** class which introduces `required` field as well as `get validators(): ValidatorFn[]` method that creates Angular validators array. Other validators can be added as well using this technique.
 
-Now, edit all `LazyControl`s:
+Now, edit all **CustomLazyControl**s:
 
 ```ts
 // Address Control
@@ -972,7 +1009,7 @@ private createForm() {
 }
 ```
 
-This adds validation functionality to our `LazyControl`s.
+This adds validation functionality to **CustomLazyControl**s.
 
 ### Test Validation
 
