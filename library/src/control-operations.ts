@@ -44,19 +44,19 @@ class FormArrayOperations implements ControlOperations {
   }
 }
 
-class FormControlOperations implements ControlOperations {
-  constructor(private form: FormControl) { }
-
-  addControl(name: string, control: FormControl) {
-    this.form.setValidators(control.validator);
-    this.form.setAsyncValidators(control.asyncValidator);
-    this.form.setValue(control.value);
-    control.valueChanges.subscribe(() => {
-      this.form.setValidators(control.validator);
-      this.form.setAsyncValidators(control.asyncValidator);
-      this.form.setValue(control.value);
-    });
-  }
-
-  removeControl(name: string, control: FormControl) { }
-}
+// class FormControlOperations implements ControlOperations {
+//   constructor(private form: FormControl) { }
+//
+//   addControl(name: string, control: FormControl) {
+//     this.form.setValidators(control.validator);
+//     this.form.setAsyncValidators(control.asyncValidator);
+//     this.form.setValue(control.value);
+//     control.valueChanges.subscribe(() => {
+//       this.form.setValidators(control.validator);
+//       this.form.setAsyncValidators(control.asyncValidator);
+//       this.form.setValue(control.value);
+//     });
+//   }
+//
+//   removeControl(name: string, control: FormControl) { }
+// }

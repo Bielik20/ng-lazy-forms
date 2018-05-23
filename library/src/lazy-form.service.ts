@@ -17,7 +17,7 @@ export class LazyFormService implements LazySelectorService {
     this.controlOperations.removeControl(name, control);
   }
 
-  /** It will initialize or reinitialize form */
+  /** It will initialize or reinitialize the form */
   initialize(form: AbstractControl) {
     this.controlOperations = ControlOperations.create(form);
     this.resetChildren();
