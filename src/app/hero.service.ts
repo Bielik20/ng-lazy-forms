@@ -1,9 +1,9 @@
 import { Injectable } from '@angular/core';
-import 'rxjs/add/operator/delay';
-import { Observable } from 'rxjs/Observable';
-import { of } from 'rxjs/observable/of';
+
+import { Observable, of } from 'rxjs';
+import { delay, map } from 'rxjs/operators';
 import { Hero } from './models/hero';
-import 'rxjs/add/operator/map';
+
 
 
 const HEROES: any[] = [
@@ -35,20 +35,22 @@ export class HeroService {
 
   // Fake server get; assume nothing can go wrong
   getHeroes(): Observable<Hero[]> {
-    return of(HEROES).delay(this.delayMs) // simulate latency with delay
-      .map(heroes => {
+    return of(HEROES).pipe(
+      delay(this.delayMs),
+      map(heroes => {
         const temp = [];
         for (const hero of heroes) {
           temp.push(new Hero(hero));
         }
         return temp;
-      });
+      })
+    );
   }
 
   // Fake server update; assume nothing can go wrong
   updateHero(hero: Hero): Observable<Hero> {
     const oldHero = HEROES.find(h => h.id === hero.id);
     const newHero = Object.assign(oldHero, hero); // Demo: mutate cached hero
-    return of(newHero).delay(this.delayMs); // simulate latency with delay
+    return of(newHero).pipe(delay(this.delayMs)); // simulate latency with delay
   }
 }

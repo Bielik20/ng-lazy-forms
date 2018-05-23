@@ -1,7 +1,7 @@
 {
   "name": "ng-lazy-forms",
   "description": "IoC solution for creating Reactive Forms",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "author": "Damian Bielecki",
   "license": "MIT",
   "keywords": [
@@ -23,12 +23,12 @@
     "url": "https://github.com/Bielik20/ng-lazy-forms/issues"
   },
   "peerDependencies": {
-    "@angular/core": "^5.2.0",
-    "@angular/common": "^5.2.0",
-    "@angular/forms": "^5.2.0",
+    "@angular/core": "^6.0.0",
+    "@angular/common": "^6.0.0",
+    "@angular/forms": "^6.0.0",
     "lodash": "^4.17.5",
     "reflect-metadata": "^0.1.12",
-    "rxjs": "^5.5.6"
+    "rxjs": "^6.0.0"
   },
   "ngPackage": {
     "$schema": "./node_modules/ng-packagr/ng-package.schema.json",

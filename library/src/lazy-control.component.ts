@@ -1,5 +1,5 @@
 import { AbstractControl } from '@angular/forms';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
 import { LazyMetadata } from './lazy-metadata';
 
 export abstract class LazyControlComponent {

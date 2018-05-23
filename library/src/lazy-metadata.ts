@@ -7,7 +7,6 @@ export abstract class LazyMetadata {
 
   constructor(options: {} = {}) {
     this.key = options['key'];
-    this.component = options['component'];
   }
 }
 

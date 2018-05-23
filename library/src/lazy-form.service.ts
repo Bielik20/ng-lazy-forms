@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { AbstractControl } from '@angular/forms';
-import { Subject } from 'rxjs/Subject';
+import { Subject } from 'rxjs';
 import { ControlOperations } from './control-operations';
 import { LazySelectorService } from './lazy-selector.service';
 

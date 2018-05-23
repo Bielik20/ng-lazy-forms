@@ -1,9 +1,11 @@
+
+import { takeUntil } from 'rxjs/operators';
 import {
   Component, ComponentFactory, ComponentFactoryResolver, ComponentRef, EventEmitter, Input, OnDestroy, OnInit, Output, ViewChild
 } from '@angular/core';
-import { cloneDeep} from 'lodash';
-import 'rxjs/add/operator/takeUntil';
-import { Subject } from 'rxjs/Subject';
+import { cloneDeep } from 'lodash';
+
+import { Subject } from 'rxjs';
 import { instanceOfOnLazySetup, LazyControlComponent, LazyControlComponentExtended } from './lazy-control.component';
 import { LazyHostDirective } from './lazy-host.directive';
 import { LazyMetadata } from './lazy-metadata';
@@ -24,11 +26,11 @@ export class LazySelectorComponent implements OnInit, OnDestroy {
   private ngUnsubscribe: Subject<void> = new Subject<void>();
 
   constructor(private componentFactoryResolver: ComponentFactoryResolver,
-              private lazySelectorService: LazySelectorService) { }
+    private lazySelectorService: LazySelectorService) { }
 
   ngOnInit() {
     this.createChild();
-    this.lazySelectorService.onReset.takeUntil(this.ngUnsubscribe).subscribe(() => {
+    this.lazySelectorService.onReset.pipe(takeUntil(this.ngUnsubscribe)).subscribe(() => {
       if (instanceOfOnLazySetup(this.child)) {
         this.resetChild();
       } else {
@@ -80,11 +82,11 @@ export class LazySelectorComponent implements OnInit, OnDestroy {
 
   private setHooks() {
     this.childRef.onDestroy(() => this.removeChildControl());
-    this.child.controlSetStart.takeUntil(this.ngUnsubscribe)
+    this.child.controlSetStart.pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(() => {
         if (this.child.control) { this.removeChildControl(); }
       });
-    this.child.controlSetEnd.takeUntil(this.ngUnsubscribe)
+    this.child.controlSetEnd.pipe(takeUntil(this.ngUnsubscribe))
       .subscribe(() => {
         this.addChildControl();
       });
