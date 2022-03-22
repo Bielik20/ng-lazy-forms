@@ -1,6 +1,6 @@
 # NgLazyForms
 
-**Context**: In the Angular framework there are two types of forms, template driven and reactive. Both of them are effective for their respective use cases but neither addresses the problem of reusability and logic encapsulation. This flaw results in very bulky and complex form components.
+**Context**: In the Angular framework there are two [types of forms](https://www.scaler.com/topics/html/html-forms/), template driven and reactive. Both of them are effective for their respective use cases but neither addresses the problem of reusability and logic encapsulation. This flaw results in very bulky and complex form components.
 
 **Objective**: Angular Lazy Forms is a project that aims to deliver IoC solution for creating Reactive Forms in Angular. The goal behind the idea is to enable user creation of small loosely coupled components which can be used to create complex forms.
 
